@@ -1,0 +1,195 @@
+{
+	"name": "LOAD_PRODUCTS_TO_LANDING",
+	"properties": {
+		"nbformat": 4,
+		"nbformat_minor": 2,
+		"bigDataPool": {
+			"referenceName": "sparkxf1tk3v",
+			"type": "BigDataPoolReference"
+		},
+		"sessionProperties": {
+			"driverMemory": "28g",
+			"driverCores": 4,
+			"executorMemory": "28g",
+			"executorCores": 4,
+			"numExecutors": 2,
+			"conf": {
+				"spark.dynamicAllocation.enabled": "false",
+				"spark.dynamicAllocation.minExecutors": "2",
+				"spark.dynamicAllocation.maxExecutors": "2",
+				"spark.autotune.trackingId": "3653a67c-b3ed-4f0f-a275-e5ae9fe2fad0"
+			}
+		},
+		"metadata": {
+			"saveOutput": true,
+			"enableDebugMode": false,
+			"kernelspec": {
+				"name": "synapse_pyspark",
+				"display_name": "Synapse PySpark"
+			},
+			"language_info": {
+				"name": "python"
+			},
+			"a365ComputeOptions": {
+				"id": "/subscriptions/d10c0527-c6d2-455e-9b89-850ef472b7bc/resourceGroups/dp203-xf1tk3v/providers/Microsoft.Synapse/workspaces/synapsexf1tk3v/bigDataPools/sparkxf1tk3v",
+				"name": "sparkxf1tk3v",
+				"type": "Spark",
+				"endpoint": "https://synapsexf1tk3v.dev.azuresynapse.net/livyApi/versions/2019-11-01-preview/sparkPools/sparkxf1tk3v",
+				"auth": {
+					"type": "AAD",
+					"authResource": "https://dev.azuresynapse.net"
+				},
+				"sparkVersion": "3.1",
+				"nodeCount": 3,
+				"cores": 4,
+				"memory": 28,
+				"automaticScaleJobs": false
+			},
+			"sessionKeepAliveTimeout": 30
+		},
+		"cells": [
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					},
+					"microsoft": {
+						"language": "sparksql"
+					},
+					"collapsed": false
+				},
+				"source": [
+					"%%sql\r\n",
+					"\r\n",
+					"USE landing;\r\n",
+					"\r\n",
+					"DELETE FROM product;"
+				],
+				"execution_count": 1
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"microsoft": {
+						"language": "sparksql"
+					},
+					"collapsed": false
+				},
+				"source": [
+					"%%sql\r\n",
+					"\r\n",
+					"USE raw;\r\n",
+					"\r\n",
+					"MERGE INTO landing.product as landing\r\n",
+					"USING raw.product as raw\r\n",
+					"ON landing.productid = raw.productid\r\n",
+					"WHEN MATCHED THEN\r\n",
+					"  UPDATE SET\r\n",
+					"    productid = raw.productid,\r\n",
+					"    productname = raw.productname,\r\n",
+					"    category = raw.category,\r\n",
+					"    price = raw.listprice,\r\n",
+					"    statustime = CURRENT_TIMESTAMP\r\n",
+					"WHEN NOT MATCHED\r\n",
+					"  THEN INSERT (\r\n",
+					"    productid,\r\n",
+					"    productname,\r\n",
+					"    category,\r\n",
+					"    price,\r\n",
+					"    statustime\r\n",
+					"  )\r\n",
+					"  VALUES (\r\n",
+					"    raw.productid,\r\n",
+					"    raw.productname,\r\n",
+					"    raw.category,\r\n",
+					"    raw.listprice,\r\n",
+					"    CURRENT_TIMESTAMP\r\n",
+					"  );"
+				],
+				"execution_count": 2
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					},
+					"microsoft": {
+						"language": "sparksql"
+					},
+					"collapsed": false
+				},
+				"source": [
+					"%%sql\r\n",
+					"\r\n",
+					"use landing;\r\n",
+					"\r\n",
+					"select * from product;"
+				],
+				"execution_count": 3
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					},
+					"microsoft": {
+						"language": "sparksql"
+					},
+					"collapsed": false
+				},
+				"source": [
+					"%%sql\r\n",
+					"\r\n",
+					"use landing;\r\n",
+					"\r\n",
+					"select count(*) from product;\r\n",
+					""
+				],
+				"execution_count": 4
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					},
+					"microsoft": {
+						"language": "python"
+					}
+				},
+				"source": [
+					"%%pyspark\r\n",
+					"mssparkutils.session.stop()"
+				],
+				"execution_count": 5
+			}
+		]
+	}
+}

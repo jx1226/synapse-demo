@@ -1,0 +1,22 @@
+{
+	"name": "test",
+	"properties": {
+		"Name": "test",
+		"EntityType": "DATABASE",
+		"Origin": {
+			"Type": "SPARK"
+		},
+		"Properties": {
+			"IsSyMSCDMDatabase": true
+		},
+		"Source": {
+			"Provider": "ADLS",
+			"Location": "abfss://files@datalakend7qjuo.dfs.core.windows.net/test",
+			"Properties": {
+				"FormatType": "csv",
+				"LinkedServiceName": "synapsend7qjuo-WorkspaceDefaultStorage"
+			}
+		}
+	},
+	"type": "DATABASE"
+}

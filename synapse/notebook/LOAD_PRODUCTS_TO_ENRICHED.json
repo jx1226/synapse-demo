@@ -1,0 +1,179 @@
+{
+	"name": "LOAD_PRODUCTS_TO_ENRICHED",
+	"properties": {
+		"nbformat": 4,
+		"nbformat_minor": 2,
+		"bigDataPool": {
+			"referenceName": "sparkxf1tk3v",
+			"type": "BigDataPoolReference"
+		},
+		"sessionProperties": {
+			"driverMemory": "28g",
+			"driverCores": 4,
+			"executorMemory": "28g",
+			"executorCores": 4,
+			"numExecutors": 2,
+			"conf": {
+				"spark.dynamicAllocation.enabled": "false",
+				"spark.dynamicAllocation.minExecutors": "2",
+				"spark.dynamicAllocation.maxExecutors": "2",
+				"spark.autotune.trackingId": "6329f293-eb22-4707-99f9-7e841a5bec3d"
+			}
+		},
+		"metadata": {
+			"saveOutput": true,
+			"enableDebugMode": false,
+			"kernelspec": {
+				"name": "synapse_sparksql",
+				"display_name": "sql"
+			},
+			"language_info": {
+				"name": "sql"
+			},
+			"a365ComputeOptions": {
+				"id": "/subscriptions/d10c0527-c6d2-455e-9b89-850ef472b7bc/resourceGroups/dp203-xf1tk3v/providers/Microsoft.Synapse/workspaces/synapsexf1tk3v/bigDataPools/sparkxf1tk3v",
+				"name": "sparkxf1tk3v",
+				"type": "Spark",
+				"endpoint": "https://synapsexf1tk3v.dev.azuresynapse.net/livyApi/versions/2019-11-01-preview/sparkPools/sparkxf1tk3v",
+				"auth": {
+					"type": "AAD",
+					"authResource": "https://dev.azuresynapse.net"
+				},
+				"sparkVersion": "3.1",
+				"nodeCount": 3,
+				"cores": 4,
+				"memory": 28,
+				"automaticScaleJobs": false
+			},
+			"sessionKeepAliveTimeout": 30
+		},
+		"cells": [
+			{
+				"cell_type": "code",
+				"metadata": {
+					"microsoft": {
+						"language": "sparksql"
+					},
+					"collapsed": false
+				},
+				"source": [
+					"%%sql\r\n",
+					"\r\n",
+					"\r\n",
+					"MERGE INTO enriched.product\r\n",
+					"using (SELECT landing.product.productid AS mergeKey,\r\n",
+					"              landing.product.*\r\n",
+					"       FROM   landing.product\r\n",
+					"       UNION ALL\r\n",
+					"       SELECT NULL AS mergeKey,\r\n",
+					"              landing.product.*\r\n",
+					"       FROM   landing.product\r\n",
+					"              JOIN enriched.product\r\n",
+					"                ON landing.product.productid = enriched.product.productid\r\n",
+					"       WHERE  enriched.product.CURRENT = 'Y'\r\n",
+					"              AND landing.product.productname <> enriched.product.productname\r\n",
+					"               OR landing.product.category <> enriched.product.category\r\n",
+					"               OR landing.product.price <> enriched.product.price) staged_updates\r\n",
+					"ON enriched.product.productid = mergekey\r\n",
+					"WHEN matched AND enriched.product.CURRENT = 'Y' AND enriched.product.productname <>\r\n",
+					"staged_updates.productname OR enriched.product.category <> staged_updates.category OR\r\n",
+					"enriched.product.price <>\r\n",
+					"staged_updates.price THEN\r\n",
+					"  UPDATE SET CURRENT = 'N',\r\n",
+					"             valid_to = staged_updates.statustime\r\n",
+					"WHEN NOT matched THEN\r\n",
+					"  INSERT(productid,\r\n",
+					"         productname,\r\n",
+					"         category,\r\n",
+					"         price,\r\n",
+					"         valid_from,\r\n",
+					"         valid_to,\r\n",
+					"         CURRENT)\r\n",
+					"  VALUES(staged_updates.productid,\r\n",
+					"         staged_updates.productname,\r\n",
+					"         staged_updates.category,\r\n",
+					"         staged_updates.price,\r\n",
+					"         staged_updates.statustime,\r\n",
+					"         NULL,\r\n",
+					"         'Y'); "
+				],
+				"execution_count": 1
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					},
+					"microsoft": {
+						"language": "sparksql"
+					},
+					"collapsed": false
+				},
+				"source": [
+					"%%sql\r\n",
+					"\r\n",
+					"use enriched;\r\n",
+					"\r\n",
+					"select * from product;"
+				],
+				"execution_count": 2
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					},
+					"microsoft": {
+						"language": "sparksql"
+					},
+					"collapsed": false
+				},
+				"source": [
+					"%%sql\r\n",
+					"\r\n",
+					"use enriched;\r\n",
+					"\r\n",
+					"select count(*) from product;\r\n",
+					""
+				],
+				"execution_count": 3
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					},
+					"microsoft": {
+						"language": "python"
+					}
+				},
+				"source": [
+					"%%pyspark\r\n",
+					"mssparkutils.session.stop()"
+				],
+				"execution_count": 4
+			}
+		]
+	}
+}

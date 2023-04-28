@@ -1,0 +1,193 @@
+{
+	"name": "LOAD_CUSTOMER_TO_ENRICHED",
+	"properties": {
+		"nbformat": 4,
+		"nbformat_minor": 2,
+		"bigDataPool": {
+			"referenceName": "sparkxf1tk3v",
+			"type": "BigDataPoolReference"
+		},
+		"sessionProperties": {
+			"driverMemory": "28g",
+			"driverCores": 4,
+			"executorMemory": "28g",
+			"executorCores": 4,
+			"numExecutors": 2,
+			"conf": {
+				"spark.dynamicAllocation.enabled": "false",
+				"spark.dynamicAllocation.minExecutors": "2",
+				"spark.dynamicAllocation.maxExecutors": "2",
+				"spark.autotune.trackingId": "977515be-5749-434e-88dd-1fe047010714"
+			}
+		},
+		"metadata": {
+			"saveOutput": true,
+			"enableDebugMode": false,
+			"kernelspec": {
+				"name": "synapse_pyspark",
+				"display_name": "Synapse PySpark"
+			},
+			"language_info": {
+				"name": "python"
+			},
+			"a365ComputeOptions": {
+				"id": "/subscriptions/d10c0527-c6d2-455e-9b89-850ef472b7bc/resourceGroups/dp203-xf1tk3v/providers/Microsoft.Synapse/workspaces/synapsexf1tk3v/bigDataPools/sparkxf1tk3v",
+				"name": "sparkxf1tk3v",
+				"type": "Spark",
+				"endpoint": "https://synapsexf1tk3v.dev.azuresynapse.net/livyApi/versions/2019-11-01-preview/sparkPools/sparkxf1tk3v",
+				"auth": {
+					"type": "AAD",
+					"authResource": "https://dev.azuresynapse.net"
+				},
+				"sparkVersion": "3.1",
+				"nodeCount": 3,
+				"cores": 4,
+				"memory": 28,
+				"automaticScaleJobs": false
+			},
+			"sessionKeepAliveTimeout": 30
+		},
+		"cells": [
+			{
+				"cell_type": "code",
+				"metadata": {
+					"microsoft": {
+						"language": "sparksql"
+					},
+					"collapsed": false
+				},
+				"source": [
+					"%%sql\r\n",
+					"\r\n",
+					"MERGE INTO enriched.customer\r\n",
+					"using (SELECT landing.customer.c_custkey AS mergeKey,\r\n",
+					"              landing.customer.*\r\n",
+					"       FROM   landing.customer\r\n",
+					"       UNION ALL\r\n",
+					"       SELECT NULL AS mergeKey,\r\n",
+					"              landing.customer.*\r\n",
+					"       FROM   landing.customer\r\n",
+					"              JOIN enriched.customer\r\n",
+					"                ON landing.customer.c_custkey = enriched.customer.c_custkey\r\n",
+					"       WHERE  enriched.customer.CURRENT = 'Y'\r\n",
+					"              AND landing.customer.c_name <> enriched.customer.c_name\r\n",
+					"               OR landing.customer.c_address <> enriched.customer.c_address\r\n",
+					"               OR landing.customer.c_nationkey <> enriched.customer.c_nationkey\r\n",
+					"               OR landing.customer.c_phone <> enriched.customer.c_phone\r\n",
+					"               OR landing.customer.c_acctbal <> enriched.customer.c_acctbal\r\n",
+					"               OR landing.customer.c_mktsegment <> enriched.customer.c_mktsegment\r\n",
+					"               OR landing.customer.c_comment <> enriched.customer.c_comment) staged_updates\r\n",
+					"ON enriched.customer.c_custkey = mergekey\r\n",
+					"WHEN matched AND enriched.customer.CURRENT = 'Y' \r\n",
+					"  AND enriched.customer.c_name <> staged_updates.c_name \r\n",
+					"  OR enriched.customer.c_address <> staged_updates.c_address \r\n",
+					"  OR enriched.customer.c_nationkey <> staged_updates.c_nationkey \r\n",
+					"  OR enriched.customer.c_phone <> staged_updates.c_phone \r\n",
+					"  OR enriched.customer.c_acctbal <> staged_updates.c_acctbal \r\n",
+					"  OR enriched.customer.c_mktsegment <> staged_updates.c_mktsegment \r\n",
+					"  OR enriched.customer.c_comment <> staged_updates.c_comment THEN\r\n",
+					"  UPDATE SET CURRENT = 'N',\r\n",
+					"             valid_to = staged_updates.statustime\r\n",
+					"WHEN NOT matched THEN\r\n",
+					"  INSERT(c_custkey,\r\n",
+					"         c_name,\r\n",
+					"         c_address,\r\n",
+					"         c_nationkey,\r\n",
+					"         c_phone,\r\n",
+					"         c_acctbal,\r\n",
+					"         c_mktsegment,\r\n",
+					"         c_comment,\r\n",
+					"         valid_from,\r\n",
+					"         valid_to,\r\n",
+					"         CURRENT)\r\n",
+					"  VALUES(staged_updates.c_custkey,\r\n",
+					"         staged_updates.c_name,\r\n",
+					"         staged_updates.c_address,\r\n",
+					"         staged_updates.c_nationkey,\r\n",
+					"         staged_updates.c_phone,\r\n",
+					"         staged_updates.c_acctbal,\r\n",
+					"         staged_updates.c_mktsegment,\r\n",
+					"         staged_updates.c_comment,\r\n",
+					"         staged_updates.statustime,\r\n",
+					"         NULL,\r\n",
+					"         'Y'); "
+				],
+				"execution_count": null
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					},
+					"microsoft": {
+						"language": "sparksql"
+					},
+					"collapsed": false
+				},
+				"source": [
+					"%%sql\r\n",
+					"\r\n",
+					"use enriched;\r\n",
+					"\r\n",
+					"select * from customer;"
+				],
+				"execution_count": null
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					},
+					"microsoft": {
+						"language": "sparksql"
+					},
+					"collapsed": false
+				},
+				"source": [
+					"%%sql\r\n",
+					"\r\n",
+					"use enriched;\r\n",
+					"\r\n",
+					"select count(*) from customer;"
+				],
+				"execution_count": null
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					},
+					"microsoft": {
+						"language": "python"
+					}
+				},
+				"source": [
+					"%%pyspark\r\n",
+					"mssparkutils.session.stop()"
+				],
+				"execution_count": 4
+			}
+		]
+	}
+}

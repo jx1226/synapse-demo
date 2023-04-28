@@ -1,0 +1,16 @@
+o_orderkey,o_custkey,o_orderstatus,o_totalprice,o_orderdate,o_orderpriority,o_clerk,o_shippriority,o_comment
+1,107,FP,5.47,1914-04-16,gA,"vFKdasdasd ",3,ct
+2,456,Ni,521.95,1991-05-23,Fl,dsaddasd,2,rp
+3,240,Mc,230.34,1998-11-15,fD,rqerwqe,4,PB
+4,247,kk,618.56,1968-12-04,zc,423432,3,aL
+5,973,gc,892.32,1975-07-08,pM,vcxvxcv,3,Ai
+6,826,og,736.95,1911-04-15,uQ,4324324,3,bP
+7,857,Ee,687.09,1922-05-05,BJ,vxcvcxv,5,fn
+8,774,tO,673.5,2012-08-28,yN,vcxvcx,1,vT
+9,329,Rn,139.25,1923-01-15,Eh,vcxvxc,3,Lh
+10,708,mv,463.55,1990-09-08,te,TT vxcvxcv,3,NN
+10003,708,mv,463.55,1990-09-08,te,TT vxcvxcv,3,NN
+10004,708,mv,463.55,1990-09-08,te,TT vxcvxcv,3,NN
+10005,708,mv,463.55,1990-09-08,te,TT vxcvxcv,3,NN
+10006,708,mv,463.55,1990-09-08,te,TT vxcvxcv,3,NN
+10007,708,mv,463.55,1990-09-08,te,TT vxcvxcv,3,NN
